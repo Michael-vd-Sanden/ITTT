@@ -1,5 +1,10 @@
 #include <Servo.h>
 
+//VCC to 5V
+//GND to GND
+//COMP/TRIG to trigPin
+//DAC_OUT to sensorPin
+
 const int trigPin = 5;
 const int sensorPin = A0;
 int sensorValue = 0;
@@ -12,7 +17,8 @@ Servo pitchServo;
 
 int down = 0;
 
-void setup() {
+void setup() 
+{
   Serial.begin(9600);
   headServo.attach(13);
   armServo.attach(12);
@@ -27,7 +33,8 @@ void setup() {
   armServo.write(down);
 }
 
-void loop() {
+void loop() 
+{
   for (int t = 0; t <= 1; t++)
   {
     eyesOpen();
@@ -37,7 +44,8 @@ void loop() {
 void eyesOpen()
 {
   // rotates the servo motor from 0 to 180 degrees
-  for (int i = 0; i <= 180; i++) {
+  for (int i = 0; i <= 180; i++) 
+  {
     headServo.write(i);
     delay(10);
     if (i == 0 || i == 20 || i == 40 || i == 60 || i == 80 || i == 100 || i == 120 || i == 140 || i == 160 || i == 180)
@@ -54,7 +62,8 @@ void eyesOpen()
   }
 
   // Repeats the previous lines from 180 to 0 degrees
-  for (int i = 180; i > 0; i--) {
+  for (int i = 180; i > 0; i--) 
+  {
     headServo.write(i);
     delay(10);
     if (i == 0 || i == 20 || i == 40 || i == 60 || i == 80 || i == 100 || i == 120 || i == 140 || i == 160 || i == 180)
@@ -99,4 +108,5 @@ int triggeredGoblin(int angle)
   Serial.println(angle);
   delay(5000);
   armServo.write(down);
+  //reset values for checking distance
 }
