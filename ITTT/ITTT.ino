@@ -7,22 +7,36 @@
 
 const int trigPin = 5;
 const int sensorPin = A0;
+const int ledPin = 13;
+const int btnPin = 4;
+const int headPin = 9;
+const int shoulderPin = 10;
+const int armPin = 11;
+
+Servo headServo;
+Servo shoulderServo;
+Servo armServo;
 int sensorValue = 0;
 int distance;
 int distance2;
 int marginDistance = 5;
-Servo headServo;
-Servo armServo;
-Servo pitchServo;
 
-int down = 0;
+
+int down = 180;
+int front = 90;
+
+bool isON = true;  //turn to false if button works
+int buttonState;
+bool check = false;
 
 void setup() 
 {
   Serial.begin(9600);
-  headServo.attach(13);
-  armServo.attach(12);
-  pitchServo.attach(8);
+  headServo.attach(headPin);
+  shoulderServo.attach(shoulderPin);
+  armServo.attach(armPin);
+  pinMode(ledPin, OUTPUT);
+  pinMode(btnPin, INPUT);
   pinMode(trigPin, OUTPUT);                   // A low pull on pin COMP/TRIG
   digitalWrite(trigPin, HIGH);                // Set to HIGH
   delay(500);
@@ -30,25 +44,52 @@ void setup()
   distance = readDistance();
   distance2 = distance;
 
-  armServo.write(down);
+  shoulderServo.write(down);
+  headServo.write(front);
+  armServo.write(front);
 }
 
 void loop() 
 {
-  for (int t = 0; t <= 1; t++)
+  buttonState = digitalRead(btnPin);
+  if(isON)
   {
-    eyesOpen();
+      eyesOpen();
+      eyesClosed();
   }
-  eyesClosed();
+  checkBtn();
 }
+
+void checkBtn()
+{
+  buttonState = digitalRead(btnPin);
+  if(buttonState == 1)
+  {
+    check = true;
+  }
+  if(buttonState == 0 && check == true)
+  {
+     check = false;
+    Serial.println("ToggledON");
+    // isON = !isON;
+  }
+  
+}
+
 void eyesOpen()
 {
+  digitalWrite(ledPin, HIGH);
   // rotates the servo motor from 0 to 180 degrees
-  for (int i = 0; i <= 180; i++) 
+  for (int i = 90; i <= 180; i++) 
   {
+    checkBtn();
+    if(isON == false)
+    {
+      return;
+    }
     headServo.write(i);
-    delay(10);
-    if (i == 0 || i == 20 || i == 40 || i == 60 || i == 80 || i == 100 || i == 120 || i == 140 || i == 160 || i == 180)
+    delay(20);
+    if (i == 90 || i == 100 || i == 120 || i == 140 || i == 160 || i == 180)
     {
       distance = readDistance();
       Serial.print(distance);
@@ -56,7 +97,7 @@ void eyesOpen()
       {
         Serial.print("MOVED AT ");
         Serial.println(i);
-        triggeredGoblin(i);
+        //triggeredGoblin(i);
       }
     }
   }
@@ -64,8 +105,13 @@ void eyesOpen()
   // Repeats the previous lines from 180 to 0 degrees
   for (int i = 180; i > 0; i--) 
   {
+    checkBtn();
+    if(isON == false)
+    {
+      return;
+    }
     headServo.write(i);
-    delay(10);
+    delay(20);
     if (i == 0 || i == 20 || i == 40 || i == 60 || i == 80 || i == 100 || i == 120 || i == 140 || i == 160 || i == 180)
     {
       distance2 = readDistance();
@@ -74,7 +120,30 @@ void eyesOpen()
       {
         Serial.print("MOVED AT ");
         Serial.println(i);
-        triggeredGoblin(i);
+        //triggeredGoblin(i);
+      }
+    }
+  }
+
+  // rotates the servo motor from 180 to 90 degrees
+  for (int i = 0; i <= 90; i++) 
+  {
+    checkBtn();
+    if(isON == false)
+    {
+      return;
+    }
+    headServo.write(i);
+    delay(20);
+    if (i == 0 || i == 20 || i == 40 || i == 60 || i == 80 || i == 100 || i == 120 || i == 140 || i == 160 || i == 180)
+    {
+      distance = readDistance();
+      Serial.print(distance);
+      if (distance - distance2 > marginDistance || distance2 - distance > marginDistance)
+      {
+        Serial.print("MOVED AT ");
+        Serial.println(i);
+        //triggeredGoblin(i);
       }
     }
   }
@@ -82,6 +151,12 @@ void eyesOpen()
 
 void eyesClosed()
 {
+  checkBtn();
+  if(isON == false)
+    {
+      return;
+    }
+  digitalWrite(ledPin, LOW);
   Serial.println("eyes closed");
   delay(3000);
 }
@@ -104,7 +179,7 @@ int triggeredGoblin(int angle)
 {
   int up = 90;
   armServo.write(up);
-  pitchServo.write(angle);
+  shoulderServo.write(angle);
   Serial.println(angle);
   delay(5000);
   armServo.write(down);
